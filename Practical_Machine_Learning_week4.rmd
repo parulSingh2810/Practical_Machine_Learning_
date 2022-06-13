@@ -1,0 +1,34 @@
+---
+author: Parul Singh
+date: 13 June, 2022
+output: html_document
+title: Practical Machine Learning Week 4 Assignment
+---
+
+\`\`\`{r} \#Loading the Libraries library(data.table) library(dplyr)
+library(caret) library(randomForest) \#Loading the train and test files
+train_data\<- fread('pml-training.csv')
+train_data$V1 <- NULL print(dim(train_data)) test_data <- fread('pml-testing.csv') test_data$V1
+\<- NULL print(dim(test_data)) \#Data cleaning \# Removing variables
+having 0 and NA. org_train_data \<- train_data %\>%
+select_if(colSums(!is.na(.)) \> nrow(.) \* 0.95)
+print(dim(org_train_data)) org_test_data \<- test_data %\>%
+select_if(colSums(!is.na(.)) \> nrow(.) \* 0.95)
+print(dim(org_test_data)) \#Removing variables which are non-numeric and
+hence will not contribute into our model. The very first 7 variables are
+of that kind only. Hence those needs to be removed from the datasets.
+org_train_data \<- org_train_data\[,8:59\] print(dim(org_train_data))
+org_test_data \<- org_test_data\[,8:59\] print(dim(org_test_data))
+\#Data Partition \#As per the course recommendation, we will seggregate
+our 'org_train_data' in 2 different parts - train set with 60% of data
+and another as a validation set with 40% of data data_part \<-
+createDataPartition(org_train_data$classe, p=0.6, list=FALSE) train_train <- org_train_data[data_part,] print(dim(train_train)) validation <- org_train_data[-data_part,] print(dim(validation)) #As the given problem classifies users in groups - A, B, C, D and E. We will use tree methods - Decision trees and Random forest to identify the most accurate method to predict the 20 test cases. #Decision Tree Model DT_fit <- train(classe ~ ., data = train_train, method="rpart") #applying the DT_fit to validation set DT_validation <- predict(DT_fit, validation) print(confusionMatrix(DT_validation, as.factor(validation$classe)))
+\#Random Forest Model RF_fit \<- randomForest(as.factor(classe) \~ .,
+data = train_train, method = "class" ) \#validating the RF_fit
+RF_validation \<- predict(RF_fit, validation, type="class")
+print(confusionMatrix(RF_validation, as.factor(validation\$classe)))
+\#Conclusion \#As Random Forest has a higher accuracy and least
+out-of-sample error for the validation set, we will predict the test set
+using RF_fit only. \#Predicting the 20 test cases Final_RF_prediction
+\<- predict(RF_fit, org_test_data, type = "class" )
+print(Final_RF_prediction)
